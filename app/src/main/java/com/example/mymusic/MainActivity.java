@@ -102,6 +102,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onResume(){
+        //devam et
         super.onResume();
         if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.M && arePermissionsDenied()){
             requestPermissions(PERMISSIONS, REQUEST_PERMISSIONS);
