@@ -19,13 +19,16 @@ import android.widget.Adapter;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.ListView;
+import android.widget.SeekBar;
 import android.widget.TextView;
 
 
 
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -87,8 +90,9 @@ public class MainActivity extends AppCompatActivity {
                 Environment.DIRECTORY_MUSIC)));
         addMusicFilesFrom(String.valueOf(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)));
     }
-        private void playMusicFile(String path){
-            MediaPlayer mp= new MediaPlayer();
+    private MediaPlayer mp;
+        private int playMusicFile(String path){
+           mp= new MediaPlayer();
             try{
                 mp.setDataSource(path);
                 mp.prepare();
@@ -98,7 +102,65 @@ public class MainActivity extends AppCompatActivity {
             catch (Exception e){
                 e.printStackTrace();
             }
+            return mp.getDuration();
         }
+        private int songPosition;
+
+    private boolean isSongPlaying;
+    private int  mPosition;
+
+    private void playSong(){
+        final String musicFilePath = musicFilesList.get(mPosition);
+        final int songDuration = playMusicFile(musicFilePath)/1000;
+        seekBar.setMax(songDuration);
+        seekBar.setVisibility(View.VISIBLE);
+        playbackControls.setVisibility(View.VISIBLE);
+        songDurationTextView.setText(String.valueOf(songDuration/60)+":"+String.valueOf(songDuration%60));
+        new Thread(){
+            public void run(){
+                songPosition=0;
+                isSongPlaying=true;
+                while( songPosition<songDuration) {
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    if (isSongPlaying) {
+                        songPosition++;
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                seekBar.setProgress(songPosition);
+                                songPositionTextView.setText(String.valueOf(songPosition / 60) + ":" + String.valueOf(songPosition % 60));
+                            }
+                        });
+                    }
+                }
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mp.pause();
+                        songPosition=0;
+                        mp.seekTo(songPosition);
+                        songPositionTextView.setText("0");
+                        pauseButton.setText("play");
+                        isSongPlaying=false;
+                        seekBar.setProgress(songPosition);
+                    }
+                });
+
+            }
+
+
+        }.start();
+    }
+
+    private TextView songPositionTextView;
+    private TextView songDurationTextView;
+    private SeekBar seekBar;
+    private View playbackControls;
+    private Button pauseButton;
 
     @Override
     protected void onResume(){
@@ -114,11 +176,65 @@ public class MainActivity extends AppCompatActivity {
             fillMusicList();
             textAdapter.setData(musicFilesList);
             listView.setAdapter(textAdapter);
+             seekBar=findViewById(R.id.seekBar);
+            seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                int songProgress;
+                @Override
+                public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                 songProgress =progress;
+                }
+
+                @Override
+                public void onStartTrackingTouch(SeekBar seekBar) {
+
+                }
+
+                @Override
+                public void onStopTrackingTouch(SeekBar seekBar) {
+                    songPosition=songProgress;
+                  mp.seekTo(songProgress);
+                }
+            });
+            }
+             songPositionTextView=findViewById(R.id.currentPosition);
+             songDurationTextView=findViewById(R.id.songDuration);
+
+            pauseButton=findViewById(R.id.pauseButton);
+            playbackControls=findViewById(R.id.playBackButtons);
+
+            pauseButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if(isSongPlaying){
+                        mp.pause();
+                        pauseButton.setText("play");
+
+                }else {
+                        if(songPosition==0){
+                            playSong();
+                        }else{
+                            mp.start();
+                        }
+
+                        pauseButton.setText("pause");
+                    }
+                    isSongPlaying=!isSongPlaying;
+
+
+
+
+
+                }
+            });
+
+
             listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    final String musicFilePath=musicFilesList.get(position);
-                }
+                  mPosition=position;
+                 playSong();
+
+                      }
             });
             isMusizPlayerInit= true;
         }
@@ -164,4 +280,4 @@ class TextAdapter extends BaseAdapter{
         }
     }
 
-}}
+}
