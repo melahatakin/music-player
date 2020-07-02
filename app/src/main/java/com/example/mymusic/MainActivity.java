@@ -163,25 +163,27 @@ public class MainActivity extends AppCompatActivity {
     private Button pauseButton;
 
     @Override
-    protected void onResume(){
+    protected void onResume() {
         super.onResume();
-        if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.M && arePermissionsDenied()){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && arePermissionsDenied()) {
             requestPermissions(PERMISSIONS, REQUEST_PERMISSIONS);
             return;
         }
-        if(! isMusizPlayerInit){
-            final ListView listView= findViewById(R.id.listViewistView);
+        ListView listView = null;
+        if (!isMusizPlayerInit) {
+            listView = findViewById(R.id.listViewistView);
             final TextAdapter textAdapter = new TextAdapter();
-            musicFilesList=  new ArrayList<>();
+            musicFilesList = new ArrayList<>();
             fillMusicList();
             textAdapter.setData(musicFilesList);
             listView.setAdapter(textAdapter);
-             seekBar=findViewById(R.id.seekBar);
+            seekBar = findViewById(R.id.seekBar);
             seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
                 int songProgress;
+
                 @Override
                 public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                 songProgress =progress;
+                    songProgress = progress;
                 }
 
                 @Override
@@ -191,53 +193,50 @@ public class MainActivity extends AppCompatActivity {
 
                 @Override
                 public void onStopTrackingTouch(SeekBar seekBar) {
-                    songPosition=songProgress;
-                  mp.seekTo(songProgress);
+                    songPosition = songProgress;
+                    mp.seekTo(songProgress);
                 }
             });
-            }
-             songPositionTextView=findViewById(R.id.currentPosition);
-             songDurationTextView=findViewById(R.id.songDuration);
-
-            pauseButton=findViewById(R.id.pauseButton);
-            playbackControls=findViewById(R.id.playBackButtons);
-
-            pauseButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if(isSongPlaying){
-                        mp.pause();
-                        pauseButton.setText("play");
-
-                }else {
-                        if(songPosition==0){
-                            playSong();
-                        }else{
-                            mp.start();
-                        }
-
-                        pauseButton.setText("pause");
-                    }
-                    isSongPlaying=!isSongPlaying;
-
-
-
-
-
-                }
-            });
-
-
-            listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                @Override
-                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                  mPosition=position;
-                 playSong();
-
-                      }
-            });
-            isMusizPlayerInit= true;
         }
+        songPositionTextView = findViewById(R.id.currentPosition);
+        songDurationTextView = findViewById(R.id.songDuration);
+
+        pauseButton = findViewById(R.id.pauseButton);
+        playbackControls = findViewById(R.id.playBackButtons);
+
+        pauseButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (isSongPlaying) {
+                    mp.pause();
+                    pauseButton.setText("play");
+
+                } else {
+                    if (songPosition == 0) {
+                        playSong();
+                    } else {
+                        mp.start();
+                    }
+
+                    pauseButton.setText("pause");
+                }
+                isSongPlaying = !isSongPlaying;
+
+
+            }
+        });
+
+
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                mPosition = position;
+                playSong();
+
+            }
+        });
+        isMusizPlayerInit = true;
+    }
     }
 class TextAdapter extends BaseAdapter{
     private List<String> data =new ArrayList<>();
